@@ -1,0 +1,44 @@
+spring.profiles.active: dev
+
+server:
+  port: 8080
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 5s
+      routes:
+        - id: ${ENV_SERVICE_NAME_A}
+          uri: ${ENV_SERVICE_URI_A}
+          predicates:
+            - Path=${ENV_SERVICE_PATH_A}**
+          filters:
+            - RewritePath=${ENV_SERVICE_PATH_A}(?<segment>.*), /$\{segment}
+        - id: ${ENV_SERVICE_NAME_B}
+          uri: ${ENV_SERVICE_URI_B}
+          predicates:
+            - Path=${ENV_SERVICE_PATH_B}**
+          filters:
+            - RewritePath=${ENV_SERVICE_PATH_B}(?<segment>.*), /$\{segment}
+
+io.kadmos.servicepaths:
+ a: 'balance-service-a:8081'
+ b: 'balance-service-b:8082'
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+ENV_SERVICE_NAME_A: balance-service-a
+ENV_SERVICE_NAME_B: balance-service-b
+ENV_SERVICE_URI_A: http://localhost:8081
+ENV_SERVICE_URI_B: http://localhost:8082
+ENV_SERVICE_PATH_A: /a/
+ENV_SERVICE_PATH_B: /b/

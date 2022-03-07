@@ -1,0 +1,3 @@
+rootProject.name = 'manage-saving-account'
+include 'run'
+

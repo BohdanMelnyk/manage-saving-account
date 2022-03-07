@@ -1,0 +1,55 @@
+version: "3.9"
+services:
+  balance-db:
+    container_name: balance-db
+    image: postgres
+    environment:
+      - POSTGRES_USER=kadmos-postgres
+      - POSTGRES_PASSWORD=kadmos-postgres
+      - POSTGRES_DB=kadmos-balance
+    ports:
+      - "5432:5432"
+
+  gateway:
+    container_name: gateway
+    image: 'gateway-0.1.jar'
+    build: ../gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - JAVA_HEAP_SIZE_MB=1024
+      - ENV_SERVICE_NAME_A=balance-service-a
+      - ENV_SERVICE_NAME_B=balance-service-b
+      - ENV_SERVICE_URI_A=http://balance-service-a:8081
+      - ENV_SERVICE_URI_B=http://balance-service-b:8082
+      - ENV_SERVICE_PATH_A=/a/
+      - ENV_SERVICE_PATH_B=/b/
+
+  balance-service-a:
+    container_name: balance-service-a
+    image: 'saving-service-0.1.jar'
+    build: ../saving-service
+    links:
+      - balance-db
+      - gateway
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - JAVA_HEAP_SIZE_MB=1024
+      - ENV_SERVICE_NAME=Service-A
+      - ENV_SERVER_PORT=8081
+      - ENV_DATASOURCE_URL=jdbc:postgresql://balance-db:5432/kadmos-balance
+
+  balance-service-b:
+    container_name: balance-service-b
+    image: 'saving-service-0.1.jar'
+    build: ../saving-service
+    links:
+      - balance-db
+      - gateway
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - JAVA_HEAP_SIZE_MB=1024
+      - ENV_SERVICE_NAME=Service-B
+      - ENV_SERVER_PORT=8082
+      - ENV_DATASOURCE_URL=jdbc:postgresql://balance-db:5432/kadmos-balance
